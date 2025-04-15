@@ -19,9 +19,9 @@ namespace API.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            if(Products.Any(p => p.Id == id) == false) return NotFound();
+            var product = Products.FirstOrDefault(p => p.Id == id);
             
-            return Ok(Products.First(p => p.Id == id));
+            return product == null ? NotFound() : Ok(product);
         }
 
         [HttpPost]
