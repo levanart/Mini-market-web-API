@@ -11,19 +11,19 @@ namespace API.Controllers
         private static int _availableId = 1;
 
         [HttpGet]
-        public ActionResult<IEnumerable<Category>> Get()
+        public IActionResult Get()
         {
-            return Categories;
+            return Ok(Categories);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Category> Get(int id)
+        public IActionResult Get(int id)
         {
             return Categories.Any(x => x.Id == id) ? Ok(Categories.FirstOrDefault(x => x.Id == id)) : NotFound();
         }
 
         [HttpPost]
-        public ActionResult<Category> Post([FromBody] Category category)
+        public IActionResult Post([FromBody] Category category)
         {
             category.Id = _availableId++;
             Categories.Add(category);
@@ -31,7 +31,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult<Category> Put(int id, [FromBody] Category category)
+        public IActionResult Put(int id, [FromBody] Category category)
         {
             var oldCategory = Categories.FirstOrDefault(x => x.Id == id);
             if (oldCategory == null) return NotFound();
@@ -41,7 +41,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<Category> Delete(int id)
+        public IActionResult Delete(int id)
         {
             var categoryToDelete = Categories.FirstOrDefault(x => x.Id == id);
             if (categoryToDelete == null) return NotFound();
