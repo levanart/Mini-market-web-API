@@ -7,7 +7,7 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        static readonly List<Product> Products = new List<Product>();
+        public static readonly List<Product> Products = new List<Product>();
         static int _availableId = 1;
 
         [HttpGet]
@@ -27,6 +27,7 @@ namespace API.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] Product product)
         {
+            if (!CategoriesController.Categories.Any(c => c.Id == product.CategoryId)) return NotFound($"Category \"{product.CategoryId}\" not found");
             product.Id = _availableId++;
             Products.Add(product);
             return CreatedAtAction(nameof(Get), new { id = product.Id }, product);

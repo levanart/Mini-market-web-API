@@ -7,7 +7,7 @@ namespace API.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        static readonly List<Category> Categories = new();
+        public static readonly List<Category> Categories = new();
         private static int _availableId = 1;
 
         [HttpGet]
