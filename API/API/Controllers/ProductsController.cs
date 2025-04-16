@@ -11,9 +11,12 @@ namespace API.Controllers
         static int _availableId = 1;
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetByCategory([FromQuery] int? categoryId)
         {
-            return Ok(Products);
+            if(categoryId == null || categoryId == 0) return Ok(Products);
+            
+            var productsToReturn = Products.Where(p => p.CategoryId == categoryId).ToList();
+            return productsToReturn.Count == 0 ? NotFound($"Products with category id \"{categoryId}\" not found") : Ok(productsToReturn);
         }
 
         [HttpGet("{id}")]
@@ -24,10 +27,18 @@ namespace API.Controllers
             return product == null ? NotFound() : Ok(product);
         }
 
+        [HttpGet("search/{query}")]
+        public IActionResult Get(string query)
+        {
+            var results = Products.Where(p => p.Name.ToLower().Contains(query.ToLower())).ToList();
+            
+            return results.Count == 0 ? NotFound("No products found") : Ok(results);
+        }
+
         [HttpPost]
         public IActionResult Post([FromBody] Product product)
         {
-            if (!CategoriesController.Categories.Any(c => c.Id == product.CategoryId)) return NotFound($"Category \"{product.CategoryId}\" not found");
+            if (CategoriesController.Categories.Any(c => c.Id == product.CategoryId) == false) return NotFound($"Category \"{product.CategoryId}\" not found");
             product.Id = _availableId++;
             Products.Add(product);
             return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
