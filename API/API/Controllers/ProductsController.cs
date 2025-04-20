@@ -1,4 +1,5 @@
 using API.Models;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -7,64 +8,62 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        public static readonly List<Product> Products = new List<Product>();
-        static int _availableId = 1;
+        private ProductsService _productsService;
+        public ProductsController(ProductsService productsService)
+        {
+            _productsService = productsService;
+        }
 
         [HttpGet]
-        public IActionResult GetByCategory([FromQuery] int? categoryId)
+        public IActionResult GetProductByCategory([FromQuery] int? categoryId)
         {
-            if(categoryId == null || categoryId == 0) return Ok(Products);
-            
-            var productsToReturn = Products.Where(p => p.CategoryId == categoryId).ToList();
-            return productsToReturn.Count == 0 ? NotFound($"Products with category id \"{categoryId}\" not found") : Ok(productsToReturn);
+            var productToReturn = _productsService.GetProductByCategory(categoryId);
+            return productToReturn != null ? Ok(productToReturn) : NotFound();
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult GetProductById(int id)
         {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-            
-            return product == null ? NotFound() : Ok(product);
+            var product = _productsService.GetProductById(id);
+            return product != null ? Ok(product) : NotFound();
         }
 
         [HttpGet("search/{query}")]
-        public IActionResult Get(string query)
+        public IActionResult GetByPartName(string query)
         {
-            var results = Products.Where(p => p.Name.ToLower().Contains(query.ToLower())).ToList();
+            var results = _productsService.GetByPartName(query);
             
-            return results.Count == 0 ? NotFound("No products found") : Ok(results);
+            return Ok(results);
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Product product)
+        public IActionResult CreateProduct([FromBody] Product product)
         {
-            if (CategoriesController.Categories.Any(c => c.Id == product.CategoryId) == false) return NotFound($"Category \"{product.CategoryId}\" not found");
-            product.Id = _availableId++;
-            Products.Add(product);
-            return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+            try
+            {
+                _productsService.CreateProduct(product);
+                return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Product product)
+        public IActionResult UpdateProduct(int id, [FromBody] Product product)
         {
-            var productToPut = Products.FirstOrDefault(x => x.Id == id);
-            if (productToPut == null) return NotFound();
-            
-            productToPut.Name = product.Name;
-            productToPut.CategoryId = product.CategoryId;
-            productToPut.Price = product.Price;
-            productToPut.Stock = product.Stock;
-            
+            var isSuccess  = _productsService.UpdateProduct(id, product);
+            if (!isSuccess) return NotFound();
+
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult DeleteProduct(int id)
         {
-            var productToDelete = Products.FirstOrDefault(x => x.Id == id);
-            if (productToDelete == null) return NotFound();
-            
-            Products.Remove(productToDelete);
+            var isSuccess = _productsService.DeleteProduct(id);
+            if (!isSuccess) return NotFound();
             
             return NoContent();
         }
